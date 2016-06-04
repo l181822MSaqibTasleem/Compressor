@@ -151,7 +151,7 @@ private:
 		}
 		if (root.left){ dumpCode(*root.left, '1' + code); }
 		if (root.right){ dumpCode(*root.right, '0' + code); }
-	}//生成各节点的编码信息
+	}//生成各叶节点的编码信息
 	void MergeTree(TreeNode &parent, TreeNode &left, TreeNode &right)
 	{
 		parent.data = *(left.data + right.data);

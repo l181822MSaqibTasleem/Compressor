@@ -51,8 +51,8 @@ void Compressor::LoadData(FILE *fp)
 		i = 0;
 		while (i < size)alpha[buf[i++]].count++;
 	};
-	// 对频率maopao排序，高频在前
-	bubble_sort(alpha, 256);
+	// 对频率冒泡排序，高频在前
+	bubble_sort<Alpha>(alpha, 256);
 	leaf = 0;
 	while (alpha[leaf].count>0){ leaf++; }
 }
@@ -84,7 +84,7 @@ void Compressor::Compress(FILE *pIn, FILE *pOut)
 				length++;
 				byte <<= 1;
 				byte |= c == '1' ? 0x01 : 0x00;
-				// 凑够一个字节则添加到队列
+				// 凑够一个字节
 				if (length % 8 == 0){
 					fwrite(&byte, sizeof(BYTE), 1, pOut);
 					byte = 0x00;
@@ -93,7 +93,8 @@ void Compressor::Compress(FILE *pIn, FILE *pOut)
 		}
 	}
 	printf("Compressed: %ld bytes.\n", fs);
-	// 填充位，以满足一个字节
+	// 不足一个字节的编码，通过填充低位
+	// 以满足最后写入的是一个正确的字节
 	attr = 8 - length % 8;
 	while (attr-- > 0){
 		byte <<= 1;
@@ -128,15 +129,16 @@ void Compressor::Decompress(FILE *pIn, FILE *pOut)
 				length--;
 				bit = byte & 0x80;
 				byte <<= 1;
+				// 如果a->10010是a的压缩过程，这一步就是10010->a的解码过程
 				if (tree.read(bit, data)){
 					fwrite(&data.alpha, sizeof(BYTE), 1, pOut);
 					fs++;
 				}
-				if (length == -1)break;
+				if (length == -1)break;// 如果已经解码了length个bit，就退出
 			}
-			if (length == -1)break;
+			if (length == -1)break;// 如果已经解码了length个bit，就退出
 		}
-		if (length == -1)break;
+		if (length == -1)break;// 如果已经解码了length个bit，就退出
 	}
 	printf("Decompressed: %ld bytes.\n", fs);
 }
